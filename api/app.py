@@ -90,10 +90,15 @@ class ConnectionManager:
         self.active_connections.append(websocket)
     
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
     
     async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+        try:
+            await websocket.send_text(message)
+        except:
+            # Remove disconnected websocket
+            self.disconnect(websocket)
     
     async def broadcast(self, message: str):
         for connection in self.active_connections:
@@ -219,9 +224,31 @@ async def websocket_generate_content(websocket: WebSocket):
     await manager.connect(websocket)
     
     try:
+        # Send initial connection confirmation
+        await manager.send_personal_message(
+            '{"status": "connected", "message": "WebSocket connected successfully"}',
+            websocket
+        )
+        
         while True:
-            # Receive generation request
-            data = await websocket.receive_json()
+            # Receive generation request with proper error handling
+            try:
+                data = await websocket.receive_json()
+            except WebSocketDisconnect:
+                # Client disconnected, break the loop
+                print("WebSocket client disconnected")
+                break
+            except Exception as e:
+                # Only send error if WebSocket is still connected
+                try:
+                    await manager.send_personal_message(
+                        f'{{"status": "error", "message": "Failed to receive data", "error": "{str(e)}"}}',
+                        websocket
+                    )
+                except:
+                    # WebSocket already closed, break the loop
+                    break
+                continue
             
             try:
                 # Validate request
@@ -266,14 +293,20 @@ async def websocket_generate_content(websocket: WebSocket):
                     )
                     
             except Exception as error:
-                await manager.send_personal_message(
-                    f'{{"status": "error", "message": "Request processing failed", "error": "{str(error)}"}}',
-                    websocket
-                )
+                try:
+                    await manager.send_personal_message(
+                        f'{{"status": "error", "message": "Request processing failed", "error": "{str(error)}"}}',
+                        websocket
+                    )
+                except:
+                    # WebSocket already closed
+                    break
                 
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
         print("WebSocket client disconnected")
+    finally:
+        # Always clean up the connection
+        manager.disconnect(websocket)
 
 
 @app.get("/platforms")
