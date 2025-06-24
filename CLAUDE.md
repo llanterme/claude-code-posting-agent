@@ -33,43 +33,97 @@
 
 ## WHAT WE ARE BUILDING
 
-# Multi-Agent LLM System
+# Multi-Agent Content Generation Backend API
 
-A multi-agent LLM system that automates content generation using typed models, LangGraph orchestration, and OpenAI completions. This system uses a pipeline of specialized agents to research a topic, transform that research into platform-optimized content
+A FastAPI-based backend service that orchestrates a multi-agent LLM system for automated content generation. The system uses typed models, LangGraph orchestration, and OpenAI completions to create a pipeline of specialized agents that research topics and generate platform-optimized content with accompanying images.
 
 ## Features
 
+- **FastAPI Web Service**: RESTful API with WebSocket support for real-time updates
 - **Research Agent**: Generates 5-7 factual bullet points on a given topic
 - **Content Agent**: Creates platform-specific content based on research with appropriate tone
-- **LangGraph orchestration**: Structured workflow between agents
-- **PydanticAI**: Strong typing and structured LLM outputs
+- **Image Agent**: Generates relevant images using DALL-E 3 based on content
+- **LangGraph Orchestration**: Structured workflow coordination between agents
+- **Real-time WebSocket Communication**: Progress updates during content generation
+- **Static File Serving**: Generated images served via `/static` endpoint
 
 ## Core Technologies
 
-## Approved Backend
-
 | Library        | Version     | Purpose                                                           |
 |----------------|-------------|-------------------------------------------------------------------|
+| FastAPI        | 0.115.0     | Modern async web framework for APIs                              |
+| Uvicorn        | 0.24.0      | ASGI server for FastAPI applications                             |
 | PydanticAI     | 0.2.15      | Declarative prompt modeling & structured LLM output parsing       |
 | LangGraph      | 0.4.8       | DAG-style multi-agent orchestration                              |
-| OpenAI SDK     | 1.84.0      | Call GPT-4o and other models through API endpoints               |
+| OpenAI SDK     | 1.84.0      | Call GPT-4o and DALL-E 3 through API endpoints                   |
 | Logfire        | 3.18.0      | Structured tracing and logging for all prompt/response cycles    |
+| WebSockets     | 13.0        | Real-time bidirectional communication                            |
 | Poetry         | 1.8.4       | Dependency, packaging, and virtualenv management                 |
 
+## API Endpoints
+
+### REST Endpoints
+- `GET /` - Health check endpoint
+- `GET /health` - Detailed health information
+- `GET /status` - System status and workflow information
+- `POST /generate` - Generate content (topic, platform, tone)
+- `GET /platforms` - Supported content platforms
+- `GET /tones` - Supported content tones
+- `GET /static/{path}` - Serve generated images
+
+### WebSocket Endpoints
+- `WS /ws/generate` - Real-time content generation with progress updates
 
 ## Project Structure
+```
 .
+├── api/              # FastAPI application
+│   └── app.py        # Main FastAPI app with endpoints and WebSocket
 ├── agents/           # Agent implementations
 │   ├── research.py   # ResearchAgent using PydanticAI
 │   ├── content.py    # ContentAgent using PydanticAI
+│   └── image.py      # ImageAgent with DALL-E 3 integration
 ├── flow/             # LangGraph workflow
 │   └── graph.py      # Agent orchestration graph
 ├── models/           # Typed models
-│   └── schema.py     # Pydantic models for agent I/O
+│   └── schema.py     # Pydantic models for agent I/O and API
 ├── utils/            # Utility modules
-│   ├── logging.py    # Logfire integration for structured logging
-├── main.py           # CLI entrypoint
-├── pyproject.toml    # Poetry configuration
+│   └── logging.py    # Logfire integration for structured logging
+├── data/             # Generated content storage
+│   └── images/       # Generated images (served via /static)
+├── main.py           # CLI entrypoint for direct workflow execution
+├── run_api.py        # API server startup script
+└── pyproject.toml    # Poetry configuration
+```
+
+## Running the Backend
+
+### Development Server
+```bash
+# Install dependencies
+poetry install
+
+# Start the API server
+poetry run python run_api.py
+# or
+poetry run uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+
+# CLI usage (direct workflow execution)
+poetry run python main.py "your topic here"
+```
+
+### API Usage
+- **Base URL**: http://localhost:8000
+- **WebSocket URL**: ws://localhost:8000/ws/generate
+- **Static Files**: http://localhost:8000/static/images/
+
+## Frontend Integration
+
+This backend is designed to work with a separate frontend application. The frontend should:
+- Make HTTP requests to the REST endpoints
+- Establish WebSocket connections for real-time updates
+- Display generated images from the `/static` endpoint
+- Handle CORS appropriately (currently configured for development)
 
 
 
