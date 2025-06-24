@@ -46,6 +46,8 @@ A multi-agent LLM system that automates content generation using typed models, L
 
 ## Core Technologies
 
+## Approved Backend
+
 | Library        | Version     | Purpose                                                           |
 |----------------|-------------|-------------------------------------------------------------------|
 | PydanticAI     | 0.2.15      | Declarative prompt modeling & structured LLM output parsing       |
@@ -68,6 +70,33 @@ A multi-agent LLM system that automates content generation using typed models, L
 │   ├── logging.py    # Logfire integration for structured logging
 ├── main.py           # CLI entrypoint
 ├── pyproject.toml    # Poetry configuration
+
+<!-- ## Approved Front end
+
+This project uses a modern, reactive, accessible, and developer-friendly frontend stack designed to pair seamlessly with Python-based backends (FastAPI, Django, Flask).
+
+### ⚙️ Core Stack
+
+| Layer                  | Technology                             | Purpose                                                                 |
+|------------------------|-----------------------------------------|-------------------------------------------------------------------------|
+| **Framework**          | `Next.js` (React 18+)                  | Server-side rendering, static site generation, route-based architecture |
+| **Language**           | `TypeScript`                           | Type safety, editor support, and reliable refactoring                   |
+| **Styling**            | `Tailwind CSS` + `shadcn/ui`           | Utility-first styling with pre-built, accessible UI primitives          |
+| **Component Primitives** | `radix-ui` or `shadcn/ui`            | A11y-first, unstyled primitives for composition                         |
+| **State Management**   | `Zustand`                              | Lightweight, React-native state store with good DX                      |
+| **Forms & Validation** | `React Hook Form` + `zod`              | Performant, accessible forms with full schema validation                |
+| **Routing**            | `Next.js App Router`                   | Modern file-based routing and layout system                             |
+| **API Handling**       | `Axios` or `React Query`               | Async data fetching from Python backends (REST/OpenAPI)                |
+| **Design System**      | `shadcn/ui`                            | Themeable, accessible component set built on radix-ui                   |
+| **Testing**            | `Vitest` + `React Testing Library`     | Unit + integration testing with focus on behavior and a11y              |
+| **Linting & Formatting** | `ESLint` + `Prettier`                | Code quality and consistent formatting enforcement                      |
+| **Codegen (optional)** | `openapi-typescript`                  | Generates TypeScript types from OpenAPI schema (FastAPI, DRF, etc.)     |
+
+---
+
+### 📦 File Structure Convention -->
+
+
 
 
 
