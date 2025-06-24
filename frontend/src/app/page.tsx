@@ -16,9 +16,9 @@ export default function Home() {
   const { generationState } = useGenerationStore();
   const [activeTab, setActiveTab] = useState("generate");
 
-  // Auto-switch to results tab when generation completes
+  // Keep user on current tab - they can manually switch to see results
   const handleGenerationSubmit = () => {
-    setActiveTab("results");
+    // Don't auto-navigate - let user see progress on Generate tab
   };
 
   return (

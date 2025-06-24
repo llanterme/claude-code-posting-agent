@@ -117,7 +117,7 @@ export function GenerationForm({ onSubmit }: GenerationFormProps) {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="platform"
@@ -134,14 +134,14 @@ export function GenerationForm({ onSubmit }: GenerationFormProps) {
                           <SelectValue placeholder="Select platform" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="max-w-[300px]">
                         {platformsData?.platforms.map((platform) => (
                           <SelectItem key={platform.name} value={platform.name}>
                             <div className="flex flex-col">
-                              <span>{platform.display_name}</span>
-                              <span className="text-xs text-muted-foreground">
+                              <span className="font-medium">{platform.display_name}</span>
+                              <span className="text-xs text-muted-foreground truncate max-w-[200px]">
                                 {platform.description}
-                                {platform.max_length && ` (${platform.max_length} chars max)`}
+                                {platform.max_length && ` (${platform.max_length} chars)`}
                               </span>
                             </div>
                           </SelectItem>
@@ -169,12 +169,12 @@ export function GenerationForm({ onSubmit }: GenerationFormProps) {
                           <SelectValue placeholder="Select tone" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="max-w-[300px]">
                         {tonesData?.tones.map((tone) => (
                           <SelectItem key={tone.name} value={tone.name}>
                             <div className="flex flex-col">
-                              <span>{tone.display_name}</span>
-                              <span className="text-xs text-muted-foreground">
+                              <span className="font-medium">{tone.display_name}</span>
+                              <span className="text-xs text-muted-foreground truncate max-w-[200px]">
                                 {tone.description}
                               </span>
                             </div>
