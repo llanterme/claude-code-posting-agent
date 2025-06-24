@@ -46,6 +46,8 @@ A multi-agent LLM system that automates content generation using typed models, L
 
 ## Core Technologies
 
+## Approved Backend
+
 | Library        | Version     | Purpose                                                           |
 |----------------|-------------|-------------------------------------------------------------------|
 | PydanticAI     | 0.2.15      | Declarative prompt modeling & structured LLM output parsing       |
@@ -68,6 +70,9 @@ A multi-agent LLM system that automates content generation using typed models, L
 │   ├── logging.py    # Logfire integration for structured logging
 ├── main.py           # CLI entrypoint
 ├── pyproject.toml    # Poetry configuration
+
+
+
 
 
 

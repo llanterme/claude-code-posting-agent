@@ -209,8 +209,12 @@ def execute_image_generation(request: ImageRequest) -> ImageResponse:
         execution_time = time.time() - start_time
         
         # Create response with metadata
+        # Convert absolute path to relative URL path for web serving
+        relative_path = os.path.relpath(file_path, "data")
+        web_path = f"static/{relative_path}".replace("\\", "/")  # Ensure forward slashes for URLs
+        
         image_response = ImageResponse(
-            image_path=os.path.abspath(file_path),
+            image_path=web_path,
             image_prompt=image_prompt,
             image_size=request.image_size,
             file_size_bytes=file_size,
@@ -250,11 +254,16 @@ def validate_image_output(response: ImageResponse) -> bool:
         True if response is valid, False otherwise
     """
     # Check that file exists and is readable
-    if not os.path.exists(response.image_path):
+    # Handle both web paths and absolute paths
+    actual_file_path = response.image_path
+    if response.image_path.startswith("static/"):
+        actual_file_path = response.image_path.replace("static/", "data/")
+    
+    if not os.path.exists(actual_file_path):
         return False
     
     try:
-        with open(response.image_path, 'rb') as f:
+        with open(actual_file_path, 'rb') as f:
             f.read(1)  # Try to read first byte
     except IOError:
         return False
@@ -270,9 +279,16 @@ def validate_image_output(response: ImageResponse) -> bool:
     if not response.image_size or not response.image_size.strip():
         return False
     
-    # Check that file path is absolute
-    if not os.path.isabs(response.image_path):
-        return False
+    # Check that file path exists (handle both absolute and relative web paths)
+    if response.image_path.startswith("static/"):
+        # Web path - convert back to actual file path for validation
+        actual_file_path = response.image_path.replace("static/", "data/")
+        if not os.path.exists(actual_file_path):
+            return False
+    else:
+        # Absolute path - check directly
+        if not os.path.isabs(response.image_path):
+            return False
     
     return True
 

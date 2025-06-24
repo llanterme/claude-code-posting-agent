@@ -199,3 +199,66 @@ def log_image_generation_error(
         log_data["request"] = request_data
     
     logfire.error("Image generation failed", **log_data)
+
+
+def log_api_request(endpoint: str, request_data: Dict[str, Any]) -> None:
+    """Log incoming API requests.
+    
+    Args:
+        endpoint: API endpoint being called
+        request_data: Request payload data
+    """
+    logfire.info(
+        "API request received",
+        endpoint=endpoint,
+        request=request_data
+    )
+
+
+def log_api_response(
+    endpoint: str, 
+    response_data: Dict[str, Any],
+    execution_time: Optional[float] = None
+) -> None:
+    """Log successful API responses.
+    
+    Args:
+        endpoint: API endpoint that was called
+        response_data: Response payload data
+        execution_time: Optional execution time in seconds
+    """
+    log_data = {
+        "endpoint": endpoint,
+        "response": response_data,
+        "status": "success"
+    }
+    
+    if execution_time is not None:
+        log_data["execution_time_seconds"] = execution_time
+    
+    logfire.info("API request completed", **log_data)
+
+
+def log_api_error(
+    endpoint: str,
+    error: Exception,
+    request_data: Optional[Dict[str, Any]] = None
+) -> None:
+    """Log API errors.
+    
+    Args:
+        endpoint: API endpoint that failed
+        error: Exception that occurred
+        request_data: Optional request data that caused the error
+    """
+    log_data = {
+        "endpoint": endpoint,
+        "error_type": type(error).__name__,
+        "error_message": str(error),
+        "status": "error"
+    }
+    
+    if request_data is not None:
+        log_data["request"] = request_data
+    
+    logfire.error("API request failed", **log_data)

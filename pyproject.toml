@@ -3,7 +3,7 @@ name = "claude-code-social-agents"
 version = "0.1.0"
 description = "Multi-agent LLM system for automated content generation"
 authors = ["Your Name <your.email@example.com>"]
-readme = "README.md"
+readme = "CLAUDE.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -14,6 +14,9 @@ logfire = "3.18.0"
 typer = "^0.12.0"
 python-dotenv = "^1.0.0"
 requests = "^2.31.0"
+fastapi = "^0.115.0"
+uvicorn = "^0.24.0"
+websockets = "^13.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
@@ -28,6 +31,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 social-agents = "main:app"
+api-server = "run_api:main"
 
 [tool.black]
 line-length = 88
