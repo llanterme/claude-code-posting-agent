@@ -3,11 +3,14 @@
 import os
 import time
 import re
+import base64
 from datetime import datetime
 from typing import Any, Dict
+from io import BytesIO
 from pydantic_ai import Agent
 from openai import OpenAI
 import requests
+from PIL import Image
 from models.schema import ImageRequest, ImageResponse, ContentResponse
 from utils.logging import (
     log_image_generation_start,
@@ -128,32 +131,6 @@ def generate_image_filename(topic: str, platform: str) -> str:
     return f"{timestamp}_{topic_slug}_{platform_safe}.png"
 
 
-def save_image_from_url(image_url: str, file_path: str) -> int:
-    """Download and save image from URL.
-    
-    Args:
-        image_url: URL of the generated image
-        file_path: Local path to save the image
-        
-    Returns:
-        File size in bytes
-        
-    Raises:
-        Exception: If image download or save fails
-    """
-    try:
-        response = requests.get(image_url, timeout=30)
-        response.raise_for_status()
-        
-        with open(file_path, 'wb') as f:
-            f.write(response.content)
-            
-        return len(response.content)
-        
-    except requests.RequestException as e:
-        raise Exception(f"Failed to download image: {e}")
-    except IOError as e:
-        raise Exception(f"Failed to save image: {e}")
 
 
 def execute_image_generation(request: ImageRequest) -> ImageResponse:
@@ -190,20 +167,39 @@ def execute_image_generation(request: ImageRequest) -> ImageResponse:
         # Initialize OpenAI client
         client = OpenAI()
         
-        # Generate image using OpenAI DALL-E
-        response = client.images.generate(
-            model="dall-e-3",  # Using DALL-E 3 as gpt-image-1 equivalent
-            prompt=image_prompt,
-            size=request.image_size,
-            quality="standard",
-            n=1
-        )
-        
-        # Extract image URL from response
-        image_url = response.data[0].url
-        
-        # Download and save the image
-        file_size = save_image_from_url(image_url, file_path)
+        # Generate image using OpenAI gpt-image-1
+        try:
+            # Generate image with gpt-image-1 (returns base64)
+            response = client.images.generate(
+                model="gpt-image-1",
+                prompt=image_prompt,
+                size=request.image_size,
+                quality="medium",  # Options: "low", "medium", "high", "auto"
+                output_format="png"  # Options: "png", "jpeg", "webp"
+              
+            )
+            
+            # Extract base64 image data from response
+            if response.data and len(response.data) > 0:
+                image_base64 = response.data[0].b64_json
+                
+                # Decode the base64 image
+                image_bytes = base64.b64decode(image_base64)
+                
+                # Create an image from the bytes
+                image = Image.open(BytesIO(image_bytes))
+                
+                # Save the image to file
+                image.save(file_path, "PNG")
+                
+                # Get file size
+                file_size = os.path.getsize(file_path)
+                
+            else:
+                raise Exception("No image data in response")
+                
+        except Exception as e:
+            raise Exception(f"Image generation failed: {str(e)}")
         
         # Calculate execution time
         execution_time = time.time() - start_time
@@ -221,12 +217,11 @@ def execute_image_generation(request: ImageRequest) -> ImageResponse:
             metadata={
                 "execution_time_seconds": execution_time,
                 "agent_version": "1.0",
-                "model_used": "dall-e-3",
+                "model_used": "gpt-image-1",
                 "source_content_platform": request.content_data.platform,
                 "source_content_topic": request.topic,
                 "image_style": request.image_style,
-                "generation_timestamp": datetime.now().isoformat(),
-                "original_image_url": image_url
+                "generation_timestamp": datetime.now().isoformat()
             }
         )
         
