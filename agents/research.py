@@ -20,6 +20,7 @@ research_agent = Agent(
     3. Focus on the most important and relevant aspects of the topic
     4. Use clear, concise language suitable for content creation
     5. Include diverse perspectives and key facts about the topic
+    6. Ensure you use the latest information you have available as of today
 
     Format your response as a ResearchResponse with:
     - bullet_points: List of 5-7 factual statements

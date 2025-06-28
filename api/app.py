@@ -1,6 +1,7 @@
 """FastAPI application for multi-agent content generation system."""
 
 import asyncio
+import os
 import time
 from typing import Dict, Any, List
 from contextlib import asynccontextmanager
@@ -12,7 +13,8 @@ from pydantic import BaseModel
 
 from flow.graph import execute_workflow, get_workflow_status
 from models.schema import ResearchRequest, ContentRequest, ImageRequest
-from utils.logging import log_api_request, log_api_response, log_api_error
+from utils.logging import log_api_request, log_api_response, log_api_error, setup_logfire
+from linkedin.client import LinkedInClient, LinkedInPostRequest, LinkedInPostResponse, validate_linkedin_config
 
 
 class GenerateContentRequest(BaseModel):
@@ -57,6 +59,7 @@ async def lifespan(app: FastAPI):
     """Application lifespan manager."""
     # Startup
     print("🚀 FastAPI Multi-Agent Content Generation System starting up...")
+    setup_logfire()
     yield
     # Shutdown
     print("🛑 FastAPI Multi-Agent Content Generation System shutting down...")
@@ -373,6 +376,75 @@ async def get_supported_tones():
             }
         ]
     }
+
+
+@app.post("/linkedin/post", response_model=LinkedInPostResponse)
+async def post_to_linkedin(request: LinkedInPostRequest):
+    """Post content to LinkedIn with optional image."""
+    start_time = time.time()
+    
+    # Log incoming request
+    log_api_request("/linkedin/post", request.model_dump())
+    
+    try:
+        # Validate LinkedIn configuration
+        config_status = validate_linkedin_config()
+        if not config_status["linkedin_configured"]:
+            raise HTTPException(
+                status_code=500, 
+                detail=f"LinkedIn not configured: {config_status['error']}"
+            )
+        
+        # Validate request parameters
+        if not request.content.strip():
+            raise HTTPException(status_code=400, detail="Content cannot be empty")
+        
+        # Validate image file if provided
+        if request.image_path:
+            if not request.image_path.startswith(("/", "data/")):
+                # Convert relative path to absolute path
+                request.image_path = f"data/images/{request.image_path}"
+            
+            if not os.path.exists(request.image_path):
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Image file not found: {request.image_path}"
+                )
+        
+        # Initialize LinkedIn client and post content
+        linkedin_client = LinkedInClient()
+        result = linkedin_client.post_content(request)
+        
+        # Log successful response
+        log_api_response("/linkedin/post", result.model_dump(), time.time() - start_time)
+        
+        return result
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as error:
+        # Log error and return 500
+        log_api_error("/linkedin/post", error, request.model_dump())
+        raise HTTPException(status_code=500, detail=f"LinkedIn posting failed: {str(error)}")
+
+
+@app.get("/linkedin/status")
+async def get_linkedin_status():
+    """Get LinkedIn integration status and configuration."""
+    try:
+        config_status = validate_linkedin_config()
+        return {
+            "service": "LinkedIn Integration",
+            "configured": config_status["linkedin_configured"],
+            "status": "ready" if config_status["linkedin_configured"] else "not_configured",
+            "details": config_status,
+            "supported_image_formats": ["png", "jpg", "jpeg", "gif"],
+            "max_image_size_mb": 20
+        }
+    except Exception as error:
+        log_api_error("/linkedin/status", error, {})
+        raise HTTPException(status_code=500, detail=f"LinkedIn status check failed: {str(error)}")
 
 
 if __name__ == "__main__":
